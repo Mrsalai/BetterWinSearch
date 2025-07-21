@@ -24,7 +24,7 @@ pub fn get_shorts()
 {
     thread::spawn(||
     {
-        let scannedpath = "C:\\Program Files (X86)";
+        let scannedpath = "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs";
         directorysearch(scannedpath);
 
         println!("Programs done")
@@ -32,16 +32,16 @@ pub fn get_shorts()
     });  //return applistresult
     thread::spawn(||
     {
-        let scannedpath  = "C:\\Program Files (X86)";
+        let scannedpath  = "C:\\Program Files";
         directorysearch(scannedpath);
-        println!("Programs done")
+        println!("Program files done")
 
     });
     thread::spawn(||
     {
         let scannedpath = "C:\\Program Files (X86)";
         directorysearch(scannedpath);
-        println!("Programs done")
+        println!("Programfiles x86 done")
 
     });
 
