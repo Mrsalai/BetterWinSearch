@@ -65,7 +65,7 @@ pub fn directorysearch(scannedpath: &str)
 
         else 
         {
-            if file.unwrap().metadata()?.is_dir()
+            if file.unwrap().metadata().unwrap().is_dir()
             {
                 scanchildprc(&pathresult);
             }
