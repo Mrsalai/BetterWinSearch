@@ -6,7 +6,6 @@ use std::io::prelude::*;
 use std::path::{Path, PathBuf};
 use std::thread;
 use rusqlite::Connection;
-
 use slint::{Weak};
 
 
@@ -16,7 +15,6 @@ pub fn main() -> Result<(), slint::PlatformError> {
     let ui_handle: Weak<MainWindow> = ui.as_weak();
     let ui: MainWindow = ui_handle.unwrap();
 
-    
     get_shorts();
     ui.run()
 
@@ -53,7 +51,7 @@ pub fn directorysearch(scannedpath: &str)
     for file in fs::read_dir(scannedpath).unwrap()
     {        
         let pathresult = file.as_ref().unwrap().path();
-        if pathresult.extension().is_some_and(|ext| ext == "lnk")
+        if pathresult.extension().is_some_and(|ext: &OsStr| ext == "lnk")
         {
             todo!("db")
 
@@ -65,13 +63,11 @@ pub fn directorysearch(scannedpath: &str)
             todo!("db")
         }
 
-
         else 
         {
-            if file.unwrap().metadata().unwrap().is_dir()
+            if file.unwrap().metadata()?.is_dir()
             {
                 scanchildprc(&pathresult);
-
             }
         }
     }
@@ -85,25 +81,21 @@ pub fn scanchildprc(pathresult:&PathBuf)
     {    
         for file in entries
         {   
-                let subpathresult = file.as_ref().unwrap().path();
-                if &subpathresult.extension().unwrap_or_default().to_string_lossy().to_string() == "lnk"
+                let subpathresult = file.unwrap().path();
+                if pathresult.extension().is_some_and(|ext: &OsStr| ext == "lnk")
                 {
                     todo!("db")
-
-                    
+ 
                 }
-                if &subpathresult.extension().unwrap_or_default().to_string_lossy().to_string() == "exe"
+            if pathresult.extension().is_some_and(|ext: &OsStr| ext == "exe")
                 {
-                    
                     todo!("db")
-
                 }
                 else 
                 {
                     scanchildprc(&subpathresult);
                 }
+
         }   
     }
-
-
 }   
