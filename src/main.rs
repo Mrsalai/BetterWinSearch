@@ -1,8 +1,9 @@
 slint::include_modules!();
+use std::ffi::OsStr;
 use std::{fs};
-use std::fs::{OpenOptions};
+use std::fs::{File, OpenOptions};
 use std::io::prelude::*;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::thread;
 use rusqlite::Connection;
 
@@ -14,139 +15,72 @@ pub fn main() -> Result<(), slint::PlatformError> {
     let ui = MainWindow::new()?;
     let ui_handle: Weak<MainWindow> = ui.as_weak();
     let ui: MainWindow = ui_handle.unwrap();
+
+    
     get_shorts();
     ui.run()
 
 }
 
-pub fn get_shorts()// -> Vec<slint::SharedString>
+pub fn get_shorts()
 {
-
-
     thread::spawn(||
     {
-        let mut startprogramdirs = OpenOptions::new()
-        .write(true)
-        .append(true)
-        .open("./index/startprogramdirs.json")
-        .unwrap();
+        let scannedpath = "C:\\Program Files (X86)";
+        directorysearch(scannedpath);
 
-        for file in fs::read_dir("C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs").unwrap()
-        {        
-            let pathresult = file.as_ref().unwrap().path();
-            if &pathresult.extension().unwrap_or_default().to_string_lossy().to_string() == "lnk"
-            {
-                startprogramdirs.write(&pathresult.to_owned().into_os_string().as_encoded_bytes()).unwrap();
-                startprogramdirs.write("\n".as_bytes()).unwrap();
-            }
+        println!("Programs done")
 
+    });  //return applistresult
+    thread::spawn(||
+    {
+        let scannedpath  = "C:\\Program Files (X86)";
+        directorysearch(scannedpath);
+        println!("Programs done")
 
-            if &pathresult.extension().unwrap_or_default().to_string_lossy().to_string() == "exe"
-            {
-                startprogramdirs.write(&pathresult.to_owned().into_os_string().as_encoded_bytes()).unwrap();
-                startprogramdirs.write("\n".as_bytes()).unwrap();
-            }
-
-
-            else 
-            {
-                if file.unwrap().metadata().unwrap().is_dir()
-                {
-                    scanchildprc(&pathresult);
-
-                }
-            }
-        }
+    });
+    thread::spawn(||
+    {
+        let scannedpath = "C:\\Program Files (X86)";
+        directorysearch(scannedpath);
         println!("Programs done")
 
     });
 
-    thread::spawn(||
-    {
-        let mut startprogramdirs = OpenOptions::new()
-        .write(true)
-        .append(true)
-        .open("./index/startprogramdirs.json")
-        .unwrap();
-
-        for file in fs::read_dir("C:\\Program Files (X86)").unwrap()
-        {        
-            let pathresult = file.as_ref().unwrap().path();
-            if &pathresult.extension().unwrap_or_default().to_string_lossy().to_string() == "lnk"
-            {
-                startprogramdirs.write(pathresult.to_owned().into_os_string().as_encoded_bytes()).unwrap();
-                startprogramdirs.write("\n".as_bytes()).unwrap();
-            }
-
-            if &pathresult.extension().unwrap_or_default().to_string_lossy().to_string() == "exe"
-            {
-                startprogramdirs.write(pathresult.to_owned().into_os_string().as_encoded_bytes()).unwrap();
-                startprogramdirs.write("\n".as_bytes()).unwrap();
-            }
-
-            else 
-            {
-                if file.unwrap().metadata().unwrap().is_dir()
-                {
-                    scanchildprc(&pathresult);
-
-                }
-            }
-        }
-        println!("Programfiles x86 done")
-    });
-
-
-    thread::spawn(||
-    {
-        let mut startprogramdirs = OpenOptions::new()
-        .write(true)
-        .append(true)
-        .open("./index/startprogramdirs.json")
-        .unwrap();
-
-        for file in fs::read_dir("C:\\Program Files").unwrap()
-        {      
-            let pathresult = file.as_ref().unwrap().path();
-            if &pathresult.extension().unwrap_or_default().to_string_lossy().to_string() == "lnk"
-            {
-                startprogramdirs.write(pathresult.to_owned().into_os_string().as_encoded_bytes()).unwrap();
-                startprogramdirs.write("\n".as_bytes()).unwrap();
-            }
-
-            if &pathresult.extension().unwrap_or_default().to_string_lossy().to_string() == "exe"
-            {
-                startprogramdirs.write(pathresult.to_owned().into_os_string().as_encoded_bytes()).unwrap();
-                startprogramdirs.write("\n".as_bytes()).unwrap();
-            }
-
-
-            else 
-            {
-                if file.unwrap().metadata().unwrap().is_dir()
-                {
-                    scanchildprc(&pathresult);
-
-                }
-            }
-        }
-        println!("Programfiles done")
-
-    });
- 
-    //return applistresult
 }    
+pub fn directorysearch(scannedpath: &str)
+{
+    for file in fs::read_dir(scannedpath).unwrap()
+    {        
+        let pathresult = file.as_ref().unwrap().path();
+        if pathresult.extension().is_some_and(|ext| ext == "lnk")
+        {
+            todo!("db")
 
+        }
+
+
+        if pathresult.extension().is_some_and(|ext| ext =="exe")
+        {
+            todo!("db")
+        }
+
+
+        else 
+        {
+            if file.unwrap().metadata().unwrap().is_dir()
+            {
+                scanchildprc(&pathresult);
+
+            }
+        }
+    }
+}
 
     //return applistresult
 pub fn scanchildprc(pathresult:&PathBuf)
 {
-        let mut startprogramdirs = OpenOptions::new()
-        .write(true)
-        .append(true)
-        .open("./index/startprogramdirs.json")
-        .unwrap();
-    //for file in fs::read_dir(pathresult).unwrap_or_default()
+    let startprogramdirs: File;
     if let Ok(entries) = fs::read_dir(pathresult)
     {    
         for file in entries
@@ -154,15 +88,15 @@ pub fn scanchildprc(pathresult:&PathBuf)
                 let subpathresult = file.as_ref().unwrap().path();
                 if &subpathresult.extension().unwrap_or_default().to_string_lossy().to_string() == "lnk"
                 {
-                    startprogramdirs.write(&subpathresult.to_string_lossy().to_string().as_bytes()).unwrap();
-                    startprogramdirs.write("\n".as_bytes()).unwrap();
+                    todo!("db")
+
                     
                 }
                 if &subpathresult.extension().unwrap_or_default().to_string_lossy().to_string() == "exe"
                 {
-                    startprogramdirs.write(&subpathresult.to_string_lossy().to_string().as_bytes()).unwrap();
-                    startprogramdirs.write("\n".as_bytes()).unwrap();
                     
+                    todo!("db")
+
                 }
                 else 
                 {
@@ -170,4 +104,6 @@ pub fn scanchildprc(pathresult:&PathBuf)
                 }
         }   
     }
+
+
 }   
