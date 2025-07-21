@@ -1,19 +1,28 @@
 slint::include_modules!();
 use std::ffi::OsStr;
 use std::{fs};
-use std::fs::{File, OpenOptions};
-use std::io::prelude::*;
-use std::path::{Path, PathBuf};
+use std::fs::{File};
+use std::path::{PathBuf};
 use std::thread;
-use rusqlite::Connection;
-use slint::{Weak};
+use rusqlite::{Connection, ToSql};
+use slint::{Image, Weak};
 
 
-pub fn main() -> Result<(), slint::PlatformError> {
-    let dbcon  = Connection::open("index.db3").unwrap();
+pub fn main() -> Result<(), slint::PlatformError> 
+{
+
     let ui = MainWindow::new()?;
     let ui_handle: Weak<MainWindow> = ui.as_weak();
     let ui: MainWindow = ui_handle.unwrap();
+
+
+    let dbcon  = Connection::open("index.db3").unwrap(); //Db init
+    dbcon.execute("
+    CREATE TABLE IF NOT EXISTS apps (
+        name TEXT,
+        location TEXT,
+        image BLOB
+    )",()).unwrap();
 
     get_shorts();
     ui.run()
@@ -46,37 +55,37 @@ pub fn get_shorts()
     });
 
 }    
-pub fn directorysearch(scannedpath: &str)
+pub fn directorysearch(scannedpath: &str,)
 {
+    let dbcon = rusqlite::Connection::open("index.db3").unwrap();
     for file in fs::read_dir(scannedpath).unwrap()
     {        
         let pathresult = file.as_ref().unwrap().path();
         if pathresult.extension().is_some_and(|ext: &OsStr| ext == "lnk")
         {
-            todo!("db")
-
+            writetodb(None,pathresult.as_os_str(),None,&dbcon)
         }
 
 
         if pathresult.extension().is_some_and(|ext| ext =="exe")
         {
-            todo!("db")
+            writetodb(None,pathresult.as_os_str(),None,&dbcon)
         }
 
         else 
         {
             if file.unwrap().metadata().unwrap().is_dir()
             {
-                scanchildprc(&pathresult);
+                writetodb(None,pathresult.as_os_str(),None,&dbcon);
+                scanchildprc(&pathresult,&dbcon);
             }
         }
     }
 }
 
     //return applistresult
-pub fn scanchildprc(pathresult:&PathBuf)
+pub fn scanchildprc(pathresult:&PathBuf,dbcon:&Connection)
 {
-    let startprogramdirs: File;
     if let Ok(entries) = fs::read_dir(pathresult)
     {    
         for file in entries
@@ -84,18 +93,28 @@ pub fn scanchildprc(pathresult:&PathBuf)
                 let subpathresult = file.unwrap().path();
                 if pathresult.extension().is_some_and(|ext: &OsStr| ext == "lnk")
                 {
-                    todo!("db")
- 
+                    writetodb(None,pathresult.as_os_str(),None,&dbcon)
+                    
                 }
             if pathresult.extension().is_some_and(|ext: &OsStr| ext == "exe")
                 {
-                    todo!("db")
+                    writetodb(None,pathresult.as_os_str(),None,&dbcon)
+
                 }
                 else 
                 {
-                    scanchildprc(&subpathresult);
+                    scanchildprc(&subpathresult,&dbcon);
                 }
 
         }   
     }
-}   
+
+}
+
+pub fn writetodb(name: Option<&str>,location: &OsStr,blob: Option<&OsStr>,dbcon:&Connection)
+{
+ 
+    dbcon.execute("INSERT INTO apps (name, location, image) VALUES (?1, ?2, ?3)",("none",location.to_str().unwrap(),"none"),);
+
+
+}
