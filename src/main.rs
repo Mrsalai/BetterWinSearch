@@ -35,7 +35,6 @@ pub fn get_shorts()
     {
         let scannedpath = "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs";
         directorysearch(scannedpath);
-
         println!("Programs done")
 
     });  //return applistresult
@@ -74,13 +73,11 @@ pub fn directorysearch(scannedpath: &str,)
 
         else 
         {
-            if file.unwrap().metadata().unwrap().is_dir()
-            {
-                writetodb(None,pathresult.as_os_str(),None,&dbcon);
-                scanchildprc(&pathresult,&dbcon);
-            }
+
+            scanchildprc(&pathresult,&dbcon);
         }
     }
+    
 }
 
     //return applistresult
@@ -90,22 +87,21 @@ pub fn scanchildprc(pathresult:&PathBuf,dbcon:&Connection)
     {    
         for file in entries
         {   
-                let subpathresult = file.unwrap().path();
-                if pathresult.extension().is_some_and(|ext: &OsStr| ext == "lnk")
+            let subpathresult = file.as_ref().unwrap().path();
+            if subpathresult.extension().is_some_and(|ext: &OsStr| ext == "lnk")
                 {
-                    writetodb(None,pathresult.as_os_str(),None,&dbcon)
+                    writetodb(None,subpathresult.as_os_str(),None,&dbcon)
                     
                 }
-            if pathresult.extension().is_some_and(|ext: &OsStr| ext == "exe")
+            if subpathresult.extension().is_some_and(|ext: &OsStr| ext == "exe")
                 {
-                    writetodb(None,pathresult.as_os_str(),None,&dbcon)
+                    writetodb(None,subpathresult.as_os_str(),None,&dbcon)
 
                 }
-                else 
+            else 
                 {
-                    scanchildprc(&subpathresult,&dbcon);
+                    scanchildprc(&subpathresult,&dbcon); 
                 }
-
         }   
     }
 
@@ -118,3 +114,12 @@ pub fn writetodb(name: Option<&str>,location: &OsStr,blob: Option<&OsStr>,dbcon:
 
 
 }
+
+
+
+
+pub fn sync()
+{
+    todo!("sync")
+}
+//check if new folder is found or old one is not found and check for shortcuts, no deep scans
