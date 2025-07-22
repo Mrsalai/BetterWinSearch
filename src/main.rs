@@ -1,6 +1,6 @@
 slint::include_modules!();
 use std::ffi::OsStr;
-use std::{fs};
+use std::{fs, path};
 use std::fs::{File};
 use std::path::{PathBuf};
 use std::thread;
@@ -8,10 +8,10 @@ use rusqlite::{Connection, ToSql};
 use slint::{Image, Weak};
 
 
-pub fn main() -> Result<(), slint::PlatformError> 
+pub fn main()
 {
 
-    let ui = MainWindow::new()?;
+    let ui = MainWindow::new().unwrap();
     let ui_handle: Weak<MainWindow> = ui.as_weak();
     let ui: MainWindow = ui_handle.unwrap();
 
@@ -23,10 +23,13 @@ pub fn main() -> Result<(), slint::PlatformError>
         location TEXT,
         image BLOB
     )",()).unwrap();
-
+    dbcon.execute("
+    CREATE TABLE IF NOT EXISTS folders (
+    path TEXT
+    )",()).unwrap();
     get_shorts();
-    ui.run()
-
+    ui.run();
+    sync(&dbcon);
 }
 
 pub fn get_shorts()
@@ -73,8 +76,12 @@ pub fn directorysearch(scannedpath: &str,)
 
         else 
         {
+            if pathresult.is_dir()
+            {
+                scanchildprc(&pathresult,&dbcon);
+                dbcon.execute("INSERT INTO folders(path) VALUES (?1)",[&pathresult.to_str()]);
+            }
 
-            scanchildprc(&pathresult,&dbcon);
         }
     }
     
@@ -118,8 +125,14 @@ pub fn writetodb(name: Option<&str>,location: &OsStr,blob: Option<&OsStr>,dbcon:
 
 
 
-pub fn sync()
+pub fn sync(dbcon:&Connection)
+
 {
-    todo!("sync")
+    let scannedpath = "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs";
+    for file in fs::read_dir(scannedpath).unwrap()
+    {   
+        let pathresult = file.unwrap().path();
+        dbcon.execute("SELECT * FROM folders WHERE path = VALUES (?1)", [pathresult.to_str()],);
+    }  //return applistresult
 }
 //check if new folder is found or old one is not found and check for shortcuts, no deep scans
