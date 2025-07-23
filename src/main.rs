@@ -63,16 +63,12 @@ pub fn directorysearch(scannedpath: &str,)
     for file in fs::read_dir(scannedpath).unwrap()
     {        
         let pathresult = file.as_ref().unwrap().path();
-        if pathresult.extension().is_some_and(|ext: &OsStr| ext == "lnk")
+        if pathresult.extension().is_some_and(|ext: &OsStr| ext == "lnk" || ext =="exe")
         {
             writetodb(None,pathresult.as_os_str(),None,&dbcon)
         }
 
 
-        if pathresult.extension().is_some_and(|ext| ext =="exe")
-        {
-            writetodb(None,pathresult.as_os_str(),None,&dbcon)
-        }
 
         else 
         {
@@ -95,15 +91,10 @@ pub fn scanchildprc(pathresult:&PathBuf,dbcon:&Connection)
         for file in entries
         {   
             let subpathresult = file.as_ref().unwrap().path();
-            if subpathresult.extension().is_some_and(|ext: &OsStr| ext == "lnk")
+            if subpathresult.extension().is_some_and(|ext: &OsStr| ext == "lnk" || ext=="exe")
                 {
                     writetodb(None,subpathresult.as_os_str(),None,&dbcon)
                     
-                }
-            if subpathresult.extension().is_some_and(|ext: &OsStr| ext == "exe")
-                {
-                    writetodb(None,subpathresult.as_os_str(),None,&dbcon)
-
                 }
             else 
                 {
