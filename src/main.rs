@@ -1,12 +1,13 @@
 slint::include_modules!();
 use std::ffi::OsStr;
+use std::time::SystemTime;
 use std::{fs, path};
 use std::fs::{File};
 use std::path::{PathBuf};
 use std::thread;
 use rusqlite::{Connection, ToSql};
 use slint::{Image, Weak};
-
+use chrono::prelude::*;
 
 pub fn main()
 {
@@ -23,16 +24,17 @@ pub fn main()
         location TEXT,
         image BLOB
     )",()).unwrap();
-    dbcon.execute("
-    CREATE TABLE IF NOT EXISTS folders (
-    path TEXT
-    )",()).unwrap();
-    get_shorts();
+    //dbcon.execute("
+    //CREATE TABLE IF NOT EXISTS folders (
+    //path TEXT
+    //)",()).unwrap();
+    dbcon.execute("CREATE TABLE lastscandate(date, TEXT)",());
+    deep_scan();
     ui.run();
     sync(&dbcon);
 }
 
-pub fn get_shorts()
+pub fn deep_scan()
 {
     thread::spawn(||
     {
@@ -117,13 +119,15 @@ pub fn writetodb(name: Option<&str>,location: &OsStr,blob: Option<&OsStr>,dbcon:
 
 
 pub fn sync(dbcon:&Connection)
-
 {
+
     let scannedpath = "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs";
     for file in fs::read_dir(scannedpath).unwrap()
     {   
-        let pathresult = file.unwrap().path();
-        dbcon.execute("SELECT * FROM folders WHERE path = VALUES (?1)", [pathresult.to_str()],);
+        let creationtime = file.unwrap().metadata().unwrap().created();
+
+
     }  //return applistresult
+    dbcon.execute("INSERT INTO date (date) VALUES (?1)", [SystemTime::now().into()]);
 }
 //check if new folder is found or old one is not found and check for shortcuts, no deep scans

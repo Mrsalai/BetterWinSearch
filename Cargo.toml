@@ -15,7 +15,7 @@ regex = "1"
 slint = "1.12.1"
 notify = "8.1.0"
 rusqlite = {version ="0.37.0", features = ["bundled"]}
-
+chrono = "0.4.41"
 
 [build-dependencies]
 slint-build = "1.12.1"
