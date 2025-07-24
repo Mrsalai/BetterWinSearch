@@ -1,5 +1,6 @@
 slint::include_modules!();
 use std::ffi::OsStr;
+use std::os::windows::fs::MetadataExt;
 use std::time::SystemTime;
 use std::{fs, path};
 use std::fs::{File};
@@ -8,6 +9,7 @@ use std::thread;
 use rusqlite::{Connection, ToSql};
 use slint::{Image, Weak};
 use chrono::prelude::*;
+use chrono::offset::MappedLocalTime;
 
 pub fn main()
 {
@@ -29,9 +31,9 @@ pub fn main()
     //path TEXT
     //)",()).unwrap();
     dbcon.execute("CREATE TABLE lastscandate(date, TEXT)",());
-    deep_scan();
-    ui.run();
+    //deep_scan();
     sync(&dbcon);
+    ui.run();
 }
 
 pub fn deep_scan()
@@ -120,14 +122,17 @@ pub fn writetodb(name: Option<&str>,location: &OsStr,blob: Option<&OsStr>,dbcon:
 
 pub fn sync(dbcon:&Connection)
 {
+    let customtime = chrono::offset::Local::now();
 
     let scannedpath = "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs";
     for file in fs::read_dir(scannedpath).unwrap()
     {   
         let creationtime = file.unwrap().metadata().unwrap().created();
-
+        //println!("{}",creationtime.unwrap().);
 
     }  //return applistresult
-    dbcon.execute("INSERT INTO date (date) VALUES (?1)", [SystemTime::now().into()]);
+    dbcon.execute("INSERT INTO lastscandate (date) VALUES (?1)", [customtime.to_string()]);
+    println!("{}",customtime.to_string());
+
 }
 //check if new folder is found or old one is not found and check for shortcuts, no deep scans
